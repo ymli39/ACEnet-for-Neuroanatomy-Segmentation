@@ -36,11 +36,6 @@ class Solver():
     def __init__(self, args, num_class):
         self.args = args
         self.num_class = num_class
-        
-        if num_class < 34:
-            args.num_slices = 3
-        else:
-            args.num_slices = 7
 
         #load data
         train_data = LoadMRIData(args.data_dir, args.data_list, 'train', num_class, num_slices=args.num_slices, se_loss = args.se_loss, use_weight = args.use_weights, Encode3D=args.encode3D)
@@ -54,28 +49,23 @@ class Solver():
         ####################################################################################
         #set optimizer for different training strategies
         if args.two_stages:
-            optimizer = torch.optim.SGD([{'params': model.encode1.parameters()},
-                                         {'params': model.encode2.parameters()},
-                                         {'params': model.encode3.parameters()},
-                                         {'params': model.encode4.parameters()},
-                                         {'params': model.encode3D1.parameters()},
-                                         {'params': model.encode3D2.parameters()},
-                                         {'params': model.encode3D3.parameters()},
-                                         {'params': model.encode3D4.parameters()},
-                                         {'params': model.bottleneck3D.parameters()},
-                                         {'params': model.bottleneck.parameters()},
-                                         {'params': model.decode4.parameters()},
-                                         {'params': model.decode3.parameters()},
-                                         {'params': model.decode2.parameters()},
-                                         {'params': model.decode1.parameters()},
-                                         {'params': model.encmodule.parameters()},
-                                         {'params': model.conv6.parameters()},
-                                         #new added parameters
-                                         {'params': model.decode0.parameters(), 'lr': args.lr},
-                                         {'params': model.conv7.parameters(), 'lr': args.lr},
-                                         {'params': model.conv8.parameters(), 'lr': args.lr},
-                                         ],
-                                        lr=1e-7, momentum=0.9, weight_decay=args.weight_decay)
+            optimizer = torch.optim.SGD([{'params': model.encode3D1.parameters()},
+                                     {'params': model.encode3D2.parameters()},
+                                     {'params': model.encode3D3.parameters()},
+                                     {'params': model.encode3D4.parameters()},
+                                     {'params': model.bottleneck3D.parameters()},
+                                     {'params': model.decode4.parameters()},
+                                     {'params': model.decode3.parameters()},
+                                     {'params': model.decode2.parameters()},
+                                     {'params': model.decode1.parameters()},
+                                     {'params': model.encmodule.parameters()},
+                                     {'params': model.conv6.parameters()},
+                                     #new added parameters
+                                     {'params': model.decode0.parameters(), 'lr': args.lr},
+                                     {'params': model.conv7.parameters(), 'lr': args.lr},
+                                     {'params': model.conv8.parameters(), 'lr': args.lr},
+                                     ],
+                                    lr=1e-7, momentum=0.9, weight_decay=args.weight_decay)
         else:
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
                                         momentum=0.9, weight_decay=args.weight_decay)
@@ -126,18 +116,16 @@ class Solver():
         self.model.train()
         tbar = tqdm(self.train_loader)
         for i, sample_batched in enumerate(tbar):
-            image = sample_batched['image'].type(torch.FloatTensor)
+            
             target = sample_batched['label'].type(torch.LongTensor)
             skull = sample_batched['skull'].type(torch.LongTensor)
             
             if self.args.cuda:
-                image, target, skull = image.cuda(), target.cuda(), skull.cuda()
+                target, skull = target.cuda(), skull.cuda()
             
-            image_3D = None
-            if self.args.encode3D:
-                image_3D = sample_batched['image_stack'].type(torch.FloatTensor)
-                if self.args.cuda:
-                    image_3D = image_3D.cuda()
+            
+            image_3D = sample_batched['image_stack'].type(torch.FloatTensor)
+            image_3D = image_3D.cuda()
             
             se_gt = None
             if self.args.se_loss:
@@ -154,12 +142,14 @@ class Solver():
             self.scheduler(self.optimizer, i, epoch, self.best_pred)
             self.optimizer.zero_grad()
             
-            outputs = self.model(image, image_3D)
+            outputs = self.model(image_3D)
             loss = self.criterion(outputs, target, skull, se_gt, weight = weights)
             loss.backward()
             self.optimizer.step()
             train_loss += loss.item()
             tbar.set_description('Train loss: %.3f' % (train_loss / (i + 1)))
+            
+            del target, skull, image_3D
             
         print("==== Epoch [" + str(epoch) + " / " + str(self.args.epochs) + "] DONE ====")
         print('Loss: %.3f' % train_loss)
@@ -198,10 +188,6 @@ class Solver():
                 volume_prediction = []
                 skull_prediction = []
                 for i in range(0, len(volume), batch_size):
-                    batch_x= volume[i:i+batch_size,:,:]
-                    
-                    #convert to NxCxHxW, current is NxHxW
-                    batch_x = batch_x[:,None]
 
                     if i<=int(self.args.num_slices*2+1):
                         image_stack0 = volume[0:int(self.args.num_slices*2+1),:,:][None]
@@ -215,7 +201,7 @@ class Solver():
                     
                     image_3D = torch.cat((image_stack0, image_stack1), dim =0)
                     
-                    outputs = self.model(batch_x, image_3D)
+                    outputs = self.model(image_3D)
                     pred = outputs[0]
                     skull_pred = outputs[2]
                     
@@ -331,7 +317,7 @@ def main():
                         help='directory to read data list')
     parser.add_argument('--encode3D', action='store_true', default=True,
                         help='directory to read data list')
-    parser.add_argument('--se-loss', action='store_false', default=False,
+    parser.add_argument('--se-loss', action='store_false', default=True,
                         help='apply se classification loss')
     parser.add_argument('--use-weights', action='store_false', default=False,
                         help='apply class weights for 2DCE loss')
@@ -348,7 +334,7 @@ def main():
                         metavar='N', help='mini-batch size (default: 16)')
     parser.add_argument('-b-test', '--test-batch-size', default=2, type=int,
                         metavar='N', help='mini-batch size (default: 16)')
-    parser.add_argument('-num-slices', '--num-slices', default=3, type=int,
+    parser.add_argument('-num-slices', '--num-slices', default=5, type=int,
                         metavar='N', help='slice thickness for spatial encoding')
     parser.add_argument('-num-class', '--num-class', default=NUM_CLASS, type=int,
                         metavar='N', help='number of classes for segmentation')

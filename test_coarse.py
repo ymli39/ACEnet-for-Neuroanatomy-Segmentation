@@ -28,27 +28,17 @@ class Solver():
     def __init__(self, args, num_class):
         self.args = args
         self.num_class = num_class
-        
-        if num_class < 34:
-            args.num_slices = 3
-        else:
-            args.num_slices = 7
 
         test_data = LoadMRIData(args.data_dir, args.data_list, 'test', num_class, num_slices=args.num_slices, se_loss = False, Encode3D=args.encode3D)
         self.test_loader = DataLoader(test_data, batch_size = 1, shuffle = False, num_workers = args.workers, pin_memory=True)
         
         model = Backbone(num_class, args.num_slices)
         
-        optimizer = torch.optim.SGD([{'params': model.encode1.parameters()},
-                                     {'params': model.encode2.parameters()},
-                                     {'params': model.encode3.parameters()},
-                                     {'params': model.encode4.parameters()},
-                                     {'params': model.encode3D1.parameters()},
+        optimizer = torch.optim.SGD([{'params': model.encode3D1.parameters()},
                                      {'params': model.encode3D2.parameters()},
                                      {'params': model.encode3D3.parameters()},
                                      {'params': model.encode3D4.parameters()},
                                      {'params': model.bottleneck3D.parameters()},
-                                     {'params': model.bottleneck.parameters()},
                                      {'params': model.decode4.parameters()},
                                      {'params': model.decode3.parameters()},
                                      {'params': model.decode2.parameters()},
@@ -104,10 +94,6 @@ class Solver():
                 
                 volume_prediction = []
                 for i in range(0, len(volume), batch_size):
-                    batch_x= volume[i:i+batch_size,:,:]
-                    
-                    #convert to NxCxHxW, current is NxHxW
-                    batch_x = batch_x[:,None]
 
                     if i<=int(self.args.num_slices*2+1):
                         image_stack0 = volume[0:int(self.args.num_slices*2+1),:,:][None]
@@ -121,7 +107,7 @@ class Solver():
                     
                     image_3D = torch.cat((image_stack0, image_stack1), dim =0)
                     
-                    outputs = self.model(batch_x, image_3D)
+                    outputs = self.model(image_3D)
                     pred = outputs[0]
                     
                     _, batch_output = torch.max(pred, dim=1)
@@ -203,7 +189,7 @@ def main():
                         help='manual epoch number (useful on restarts)')
     parser.add_argument('-b-test', '--test-batch-size', default=2, type=int,
                         metavar='N', help='mini-batch size (default: 16)')
-    parser.add_argument('-num-slices', '--num-slices', default=3, type=int,
+    parser.add_argument('-num-slices', '--num-slices', default=5, type=int,
                         metavar='N', help='slice thickness for spatial encoding')
     parser.add_argument('-num-class', '--num-class', default=28, type=int,
                         metavar='N', help='number of classes for segmentation')

@@ -15,7 +15,7 @@ from data_utils.utils import estimate_weights_mfb
 
 class LoadMRIData(Dataset):
     
-    def __init__(self, mri_dir, list_dir, phase, num_class, num_slices=3, se_loss = True, Encode3D = False, use_weight = False):
+    def __init__(self, mri_dir, list_dir, phase, num_class, num_slices=5, se_loss = True, Encode3D = False, use_weight = False):
         "load MRI into a 2D slice and a 3D image"
         
         self.phase = phase
