@@ -73,12 +73,12 @@ CUDA_VISIBLE_DEVICES=0 python test_(coarse/fine).py
 ## Reference
 Please refer to the paper for more implementation details:
 ```
-@misc{li2020acenet,
-    title={ACEnet: Anatomical Context-Encoding Network for Neuroanatomy Segmentation},
-    author={Yuemeng Li and Hongming Li and Yong Fan},
-    year={2020},
-    eprint={2002.05773},
-    archivePrefix={arXiv},
-    primaryClass={eess.IV}
+@article{li2021acenet,
+  title={ACEnet: Anatomical Context-Encoding Network for Neuroanatomy Segmentation},
+  author={Li, Yuemeng and Li, Hongming and Fan, Yong},
+  journal={Medical Image Analysis},
+  pages={101991},
+  year={2021},
+  publisher={Elsevier}
 }
 ```
