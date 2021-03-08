@@ -1,0 +1,16 @@
+Input parameters
+
+@param --data-name: directory of the images needs to be segmented
+@param --save-dir:  directory to save output
+@param --seg-task: coarse (could either be fine or coarse)
+
+output image is saved as pred.nii.gz and output skull is saved as skull.nii.gz
+
+
+run script
+coarse segmentation:
+CUDA_VISIBLE_DEVICES=0 python test.py --data-name /directory for test image/singleMRIimage.nii.gz --save-dir ./MRI_model/MALC_coarse/ --seg-task coarse
+
+fine segmentation:
+CUDA_VISIBLE_DEVICES=0 python test.py --data-name /directory for test image/singleMRIimage.nii.gz --save-dir ./MRI_model/MALC_fine/ --seg-task fine
+

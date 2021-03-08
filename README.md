@@ -70,6 +70,16 @@ CUDA_VISIBLE_DEVICES=0 python test_(coarse/fine).py
 
 -------------------------------------------------------------
 
+## Testing
+I have updated a test_demo folder for people to use, this folder contains the models trained on 30 MALC 2012 dataset in both coarse-grained and fine-grained segmentations. 
+
+You could chose any MRI images to generate corresponding segmentation labels. This model takes the input of a MRI brain images and output the setgmentation mask and skull mask.
+
+The testing run script is referred in file "runscript.txt"
+
+
+-------------------------------------------------------------
+
 ## Reference
 Please refer to the paper for more implementation details:
 ```
