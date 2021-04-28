@@ -1,7 +1,6 @@
 ##+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #Created by: Yuemeng Li
 #BE department, University of Pennsylvania
-#Email: ymli@seas.upenn.edu
 ##+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
