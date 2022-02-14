@@ -77,7 +77,11 @@ You could chose any MRI images to generate corresponding segmentation labels. Th
 
 The testing run script is referred in file "runscript.txt"
 
+-------------------------------------------------------------
 
+## Update
+
+I added a dataloader file for loading nifty data. The file could be found under directory: ./data_utils/MRIloader_nifty.py
 -------------------------------------------------------------
 
 ## Reference
